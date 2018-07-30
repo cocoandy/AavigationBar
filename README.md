@@ -2,10 +2,12 @@
 底部导航
 
 这个是自己做项目的时候，自己写的，通过自定义View去画的，我不是大牛，我只是努力爬坑的孩子，不喜欢勿喷，有什么问题希望大家可以一起交流学习
+
 QQ 915832847
+
 email wx_bin@sina.com
 
- ![image](https://github.com/ButBueatiful/dotvim/raw/master/screenshots/vim-screenshot.jpg)
+ ![image](https://github.com/cocoandy/AavigationBar/blob/master/res_intr/20545743895669897.png)
 
 ## 1、android studio Gradle 依赖
 
