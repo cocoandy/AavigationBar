@@ -158,15 +158,7 @@ public class NavigationBar extends View implements ViewPager.OnPageChangeListene
             case MotionEvent.ACTION_UP:
                 //只有松开的时候才做选择
                 int position = getItemPosition((int) event.getX());
-                if (viewPager != null) {
-                    setCurrentView(position);
-                } else {
-                    setCurrentItem(position);
-                }
-
-                if (onNavigationListener != null) {
-                    onNavigationListener.onNavigationItem(position, mDatas.get(position));
-                }
+                selectCurrentItem(position);
                 break;
 
         }
@@ -196,6 +188,17 @@ public class NavigationBar extends View implements ViewPager.OnPageChangeListene
 
     }
 
+    public void selectCurrentItem(int position){
+        if (viewPager != null) {
+            setCurrentView(position);
+        } else {
+            setCurrentItem(position);
+        }
+
+        if (onNavigationListener != null) {
+            onNavigationListener.onNavigationItem(position, mDatas.get(position));
+        }
+    }
 
     /**
      * ViewPage 设置当前显示的Fragment
@@ -213,11 +216,11 @@ public class NavigationBar extends View implements ViewPager.OnPageChangeListene
      *
      * @param position
      */
-    public void setCurrentItem(int position) {
+    private void setCurrentItem(int position) {
         if (onInitialization != null) {
             if (selectItem != position) {
                 selectItem = position;
-                changeFragment(onInitialization.onInitialization(position,mDatas.get(position)));
+                changeFragment(onInitialization.onInitialization(position, mDatas.get(position)));
                 invalidate();
             }
         }
@@ -269,19 +272,35 @@ public class NavigationBar extends View implements ViewPager.OnPageChangeListene
      * @param normalIcom 正常显示的字体颜色
      */
     public void addItem(String title, int normalIcom, int selectIcon) {
-        ItemBean item = new ItemBean();
-        item.setTitle(title);
-        item.setSelectIcon(selectIcon);
-        item.setNormalIcom(normalIcom);
-        mDatas.add(item);
+        addItem(title, "", normalIcom, selectIcon);
     }
-    public void addItem(String title,String tag, int normalIcom, int selectIcon) {
+
+    public void addItem(String title, String tag, int normalIcom, int selectIcon) {
         ItemBean item = new ItemBean();
         item.setTitle(title);
         item.setSelectIcon(selectIcon);
         item.setNormalIcom(normalIcom);
         item.setTag(tag);
         mDatas.add(item);
+    }
+
+    /**
+     * 更新导航某一项
+     * @param position
+     * @param title
+     * @param tag
+     * @param normalIcom
+     * @param selectIcon
+     */
+    public void updataItem(int position, String title, String tag, int normalIcom, int selectIcon) {
+        if (position < mDatas.size() && position >= 0) {
+            mDatas.get(position).setTitle(title);
+            mDatas.get(position).setSelectIcon(selectIcon);
+            mDatas.get(position).setNormalIcom(normalIcom);
+            mDatas.get(position).setTag(tag);
+            selectCurrentItem(position);
+            invalidate();
+        }
     }
 
 
