@@ -5,6 +5,8 @@
 QQ 915832847
 email wx_bin@sina.com
 
+ ![image](https://github.com/ButBueatiful/dotvim/raw/master/screenshots/vim-screenshot.jpg)
+
 ## 1、android studio Gradle 依赖
 
 #### 1、工程下的Gradle
