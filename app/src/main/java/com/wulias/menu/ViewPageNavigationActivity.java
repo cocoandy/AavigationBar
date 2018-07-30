@@ -55,6 +55,7 @@ public class ViewPageNavigationActivity extends AppCompatActivity implements OnN
         };
 
         viewPager.setAdapter(adapter);
+
         navigationBar.bindViewPage(viewPager);//绑定Viewpage
         navigationBar.setSelectTextColor(R.color.colorPrimary);
         navigationBar.setNormalTextColor(R.color.bottom_textcolor);
