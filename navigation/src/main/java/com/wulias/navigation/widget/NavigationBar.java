@@ -79,6 +79,18 @@ public class NavigationBar extends View implements ViewPager.OnPageChangeListene
     //ViewPage对象(底部菜单+ViewPage)
     private ViewPager viewPager;
 
+    private int textSize = 11;
+
+    private int imgPandTop = 3;//图片到顶部的距离
+
+    private int imgPandBottom = 8;//图片到底部的距离
+
+    private int tvPandBottom = 0;//文字到底部的距离
+
+
+
+
+
     public NavigationBar(Context context) {
         this(context, null);
     }
@@ -93,13 +105,19 @@ public class NavigationBar extends View implements ViewPager.OnPageChangeListene
         init();
     }
 
+
+
+
+    /**
+     * 初始化画笔
+     */
     public void init() {
         mDatas = new ArrayList<>();
         mPaint = new Paint();
         mPaint.setColor(Color.RED);
         mPaint.setStyle(Paint.Style.STROKE);
         mPaint.setAntiAlias(true);
-        mPaint.setTextSize(dip2px(11));
+        mPaint.setTextSize(dip2px(textSize));
         mFontMetrics = mPaint.getFontMetrics();
     }
 
@@ -129,19 +147,45 @@ public class NavigationBar extends View implements ViewPager.OnPageChangeListene
                 bitmap = BitmapFactory.decodeResource(context.getResources(), item.getNormalIcom());
             }
             int textWidth = (int) mPaint.measureText(item.getTitle());
-            //标题位置 x : 前面item总长 mItenWidth * i 加上 自身item长度减去 自身显示文字长度 再取一半 y : 控件高度减去文字预留空间(mHeight - dip2px(15) / 2 这个是得到预留给图片的空间)
-            canvas.drawText(item.getTitle(), mItenWidth * i + (mItenWidth - textWidth) / 2, (mHeight - dip2px(15) / 2), mPaint);
+            int[] tvLocal = getTextLocal(i, textWidth);
+            canvas.drawText(item.getTitle(), tvLocal[0], tvLocal[1], mPaint);
+
 
             float bitmapHeight = bitmap.getHeight();
-            // 计算图片缩略大小 ： 控件可显示高度/图片高度   注意： dip2px(15)文字所占空间高度 mHeight / 5 是四周的间隙大小
-            float scal = (mHeight - dip2px(15) - mHeight / 5) / bitmapHeight * 1f;
+            float[] matrixValue = getImgLocal(i, bitmapHeight);
             Matrix matrix = new Matrix();
-            matrix.postScale(scal, scal, 0, 0);
-            //计算图片平移距离 mHeight / 10 是类似panddingTop的值 上边mHeight / 5是因为包含上下距离 前面item总长 mItenWidth * i 加上 自身长度mHeight - dip2px(15) - mHeight / 5 包含了间隙
-            matrix.postTranslate(mItenWidth * i + (mItenWidth - mHeight + dip2px(15) + mHeight / 5) / 2, mHeight / 10);
+            matrix.postScale(matrixValue[0], matrixValue[0], 0, 0);
+            matrix.postTranslate(matrixValue[1], matrixValue[2]);
             canvas.drawBitmap(bitmap, matrix, null);
             bitmap.recycle();
         }
+    }
+
+
+    /**
+     * 获取文字的坐标
+     */
+    public int[] getTextLocal(int index, int size) {
+        int[] local = new int[4];
+        //文字在x轴的坐标
+        local[0] = mItenWidth * index + (mItenWidth - size) / 2;
+        //文字在y轴的坐标
+        local[1] = mHeight - dip2px(tvPandBottom) - sp2px(textSize)/2;
+        return local;
+    }
+
+    /**
+     *获取图片matrix参数
+     */
+    public float[] getImgLocal(int index, float bitmapHeight) {
+        float[] matrix = new float[3];
+        //matrix的scal
+        matrix[0] = (mHeight - dip2px(tvPandBottom + imgPandBottom + imgPandTop) - sp2px(textSize)) / bitmapHeight * 1f;
+        //x坐标
+        matrix[1] = mItenWidth * index + (mItenWidth - mHeight + sp2px(textSize) + dip2px(tvPandBottom + imgPandBottom + imgPandTop)) / 2;
+        //y坐标
+        matrix[2] = dip2px(imgPandTop);
+        return matrix;
     }
 
     @Override
@@ -188,7 +232,7 @@ public class NavigationBar extends View implements ViewPager.OnPageChangeListene
 
     }
 
-    public void selectCurrentItem(int position){
+    public void selectCurrentItem(int position) {
         if (viewPager != null) {
             setCurrentView(position);
         } else {
@@ -217,12 +261,12 @@ public class NavigationBar extends View implements ViewPager.OnPageChangeListene
      * @param position
      */
     private void setCurrentItem(int position) {
-        if (onInitialization != null) {
-            if (selectItem != position) {
-                selectItem = position;
+        if (selectItem != position) {
+            selectItem = position;
+            if (onInitialization != null) {
                 changeFragment(onInitialization.onInitialization(position, mDatas.get(position)));
-                invalidate();
             }
+            invalidate();
         }
     }
 
@@ -264,6 +308,12 @@ public class NavigationBar extends View implements ViewPager.OnPageChangeListene
         return (int) (dpValue * scale + 0.5f);
     }
 
+    //4.sp转px
+    public int sp2px(float spValue) {
+        final float fontScale = context.getResources().getDisplayMetrics().scaledDensity;
+        return (int) (spValue * fontScale + 0.5f);
+    }
+
     /**
      * 添加菜单的数据
      *
@@ -286,6 +336,7 @@ public class NavigationBar extends View implements ViewPager.OnPageChangeListene
 
     /**
      * 更新导航某一项
+     *
      * @param position
      * @param title
      * @param tag
@@ -364,7 +415,7 @@ public class NavigationBar extends View implements ViewPager.OnPageChangeListene
      * @param fragment
      */
     public void changeFragment(Fragment fragment) {
-        if (fragmentId == 0 || fragment == null) return;
+        if (fragmentId == 0 || fragment == null || manager == null) return;
 
         FragmentTransaction beginTransaction = manager.beginTransaction();
 
@@ -381,4 +432,32 @@ public class NavigationBar extends View implements ViewPager.OnPageChangeListene
         currFragment = fragment;
     }
 
+
+    /**
+     * 设置字体大小 默认是11sp
+     */
+    public void setTextSize(int textSize) {
+        this.textSize = textSize;
+    }
+
+    /**
+     * 设置图片到顶部的距离 默认是3dp
+     */
+    public void setImgPandTop(int imgPandTop) {
+        this.imgPandTop = imgPandTop;
+    }
+
+    /**
+     * 设置图片到文字间距离 默认8dp
+     */
+    public void setImgPandBottom(int imgPandBottom) {
+        this.imgPandBottom = imgPandBottom;
+    }
+
+    /**
+     * 设置文字到底部的距离 默认是0
+     */
+    public void setTvPandBottom(int tvPandBottom) {
+        this.tvPandBottom = tvPandBottom;
+    }
 }
