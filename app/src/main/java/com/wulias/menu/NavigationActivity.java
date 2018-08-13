@@ -37,7 +37,7 @@ public class NavigationActivity extends AppCompatActivity implements OnFragmentI
 //        navigationBar.addOnInitialization(this);//初始化回调，一定要设置，非Viewpage
         navigationBar.addOnNavigationListener(this);
         //设置默认 这个没有默认，需要用户自己设置
-//        navigationBar.selectCurrentItem(0);
+        navigationBar.selectCurrentItem(0);
     }
 
     @Override

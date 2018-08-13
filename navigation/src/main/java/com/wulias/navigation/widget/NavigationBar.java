@@ -18,16 +18,18 @@ import android.view.View;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.wulias.navigation.INavigation;
 import com.wulias.navigation.bean.ItemBean;
 import com.wulias.navigation.listener.OnFragmentInitialization;
 import com.wulias.navigation.listener.OnNavigationClickListener;
 import com.wulias.navigation.listener.OnNavigationScollingListener;
 
 /**
- * Created by Administrator on 2018/7/30.
+ * 导航条
+ * Created by 曹小贼 on 2018/7/30.
  */
 
-public class NavigationBar extends View implements ViewPager.OnPageChangeListener {
+public class NavigationBar extends View implements ViewPager.OnPageChangeListener, INavigation {
 
     private Context context;
 
@@ -88,9 +90,6 @@ public class NavigationBar extends View implements ViewPager.OnPageChangeListene
     private int tvPandBottom = 0;//文字到底部的距离
 
 
-
-
-
     public NavigationBar(Context context) {
         this(context, null);
     }
@@ -106,12 +105,10 @@ public class NavigationBar extends View implements ViewPager.OnPageChangeListene
     }
 
 
-
-
     /**
      * 初始化画笔
      */
-    public void init() {
+    private void init() {
         mDatas = new ArrayList<>();
         mPaint = new Paint();
         mPaint.setColor(Color.RED);
@@ -165,19 +162,19 @@ public class NavigationBar extends View implements ViewPager.OnPageChangeListene
     /**
      * 获取文字的坐标
      */
-    public int[] getTextLocal(int index, int size) {
+    private int[] getTextLocal(int index, int size) {
         int[] local = new int[4];
         //文字在x轴的坐标
         local[0] = mItenWidth * index + (mItenWidth - size) / 2;
         //文字在y轴的坐标
-        local[1] = mHeight - dip2px(tvPandBottom) - sp2px(textSize)/2;
+        local[1] = mHeight - dip2px(tvPandBottom) - sp2px(textSize) / 2;
         return local;
     }
 
     /**
-     *获取图片matrix参数
+     * 获取图片matrix参数
      */
-    public float[] getImgLocal(int index, float bitmapHeight) {
+    private float[] getImgLocal(int index, float bitmapHeight) {
         float[] matrix = new float[3];
         //matrix的scal
         matrix[0] = (mHeight - dip2px(tvPandBottom + imgPandBottom + imgPandTop) - sp2px(textSize)) / bitmapHeight * 1f;
@@ -232,17 +229,6 @@ public class NavigationBar extends View implements ViewPager.OnPageChangeListene
 
     }
 
-    public void selectCurrentItem(int position) {
-        if (viewPager != null) {
-            setCurrentView(position);
-        } else {
-            setCurrentItem(position);
-        }
-
-        if (onNavigationListener != null) {
-            onNavigationListener.onNavigationItem(position, mDatas.get(position));
-        }
-    }
 
     /**
      * ViewPage 设置当前显示的Fragment
@@ -261,15 +247,37 @@ public class NavigationBar extends View implements ViewPager.OnPageChangeListene
      * @param position
      */
     private void setCurrentItem(int position) {
-        if (selectItem != position) {
-            selectItem = position;
-            if (onInitialization != null) {
-                changeFragment(onInitialization.onInitialization(position, mDatas.get(position)));
-            }
-            invalidate();
+
+        selectItem = position;
+        if (onInitialization != null) {
+            changeFragment(onInitialization.onInitialization(position, mDatas.get(position)));
         }
+        invalidate();
     }
 
+
+    /**
+     * 切换fragment 不会再次初始化
+     *
+     * @param fragment
+     */
+    private void changeFragment(Fragment fragment) {
+        if (fragmentId == 0 || fragment == null || manager == null) return;
+
+        FragmentTransaction beginTransaction = manager.beginTransaction();
+
+        if (!fragment.isAdded()) {
+            beginTransaction.add(fragmentId, fragment, String.valueOf(selectItem));
+        } else {
+            beginTransaction.show(fragment);
+        }
+        if (currFragment != null) {
+            beginTransaction.hide(currFragment);
+        }
+        beginTransaction.commit();
+
+        currFragment = fragment;
+    }
 
     /**
      * 获取菜单下标
@@ -303,24 +311,17 @@ public class NavigationBar extends View implements ViewPager.OnPageChangeListene
      * @param dpValue
      * @return
      */
-    public int dip2px(float dpValue) {
+    private int dip2px(float dpValue) {
         final float scale = context.getResources().getDisplayMetrics().density;
         return (int) (dpValue * scale + 0.5f);
     }
 
     //4.sp转px
-    public int sp2px(float spValue) {
+    private int sp2px(float spValue) {
         final float fontScale = context.getResources().getDisplayMetrics().scaledDensity;
         return (int) (spValue * fontScale + 0.5f);
     }
 
-    /**
-     * 添加菜单的数据
-     *
-     * @param title      菜单的标题
-     * @param selectIcon 被选择的字体颜色
-     * @param normalIcom 正常显示的字体颜色
-     */
     public void addItem(String title, int normalIcom, int selectIcon) {
         addItem(title, "", normalIcom, selectIcon);
     }
@@ -334,15 +335,6 @@ public class NavigationBar extends View implements ViewPager.OnPageChangeListene
         mDatas.add(item);
     }
 
-    /**
-     * 更新导航某一项
-     *
-     * @param position
-     * @param title
-     * @param tag
-     * @param normalIcom
-     * @param selectIcon
-     */
     public void updataItem(int position, String title, String tag, int normalIcom, int selectIcon) {
         if (position < mDatas.size() && position >= 0) {
             mDatas.get(position).setTitle(title);
@@ -355,11 +347,20 @@ public class NavigationBar extends View implements ViewPager.OnPageChangeListene
     }
 
 
-    /**
-     * 设置绑定 ViewPager
-     *
-     * @param viewPager
-     */
+    public void selectCurrentItem(int position) {
+        if (selectItem != position) {//被选中后就不在被选中了
+            if (viewPager != null) {
+                setCurrentView(position);
+            } else {
+                setCurrentItem(position);
+            }
+
+            if (onNavigationListener != null) {
+                onNavigationListener.onNavigationItem(position, mDatas.get(position));
+            }
+        }
+    }
+
     public void bindViewPage(ViewPager viewPager) {
         this.selectItem = 0;
         this.viewPager = viewPager;
@@ -371,92 +372,36 @@ public class NavigationBar extends View implements ViewPager.OnPageChangeListene
         this.fragmentId = fragmentId;
     }
 
-    /**
-     * 导航之点击事件监听
-     *
-     * @param onNavigationListener
-     */
     public void addOnNavigationListener(OnNavigationClickListener onNavigationListener) {
         this.onNavigationListener = onNavigationListener;
         setCurrentItem(0);
     }
 
-    /**
-     * 导航之界面切换 界面实例化
-     *
-     * @param onInitialization
-     */
     public void addOnInitialization(OnFragmentInitialization onInitialization) {
         this.onInitialization = onInitialization;
     }
 
-    /**
-     * 设置被选中字体颜色
-     *
-     * @param selectTextColor
-     */
     public void setSelectTextColor(int selectTextColor) {
         this.selectTextColor = context.getResources().getColor(selectTextColor);
     }
 
-    /**
-     * 设置字体正常显示颜色
-     *
-     * @param normalTextColor
-     */
     public void setNormalTextColor(int normalTextColor) {
         this.normalTextColor = context.getResources().getColor(normalTextColor);
     }
 
 
-    /**
-     * 切换fragment 不会再次初始化
-     *
-     * @param fragment
-     */
-    public void changeFragment(Fragment fragment) {
-        if (fragmentId == 0 || fragment == null || manager == null) return;
-
-        FragmentTransaction beginTransaction = manager.beginTransaction();
-
-        if (!fragment.isAdded()) {
-            beginTransaction.add(fragmentId, fragment, String.valueOf(selectItem));
-        } else {
-            beginTransaction.show(fragment);
-        }
-        if (currFragment != null) {
-            beginTransaction.hide(currFragment);
-        }
-        beginTransaction.commit();
-
-        currFragment = fragment;
-    }
-
-
-    /**
-     * 设置字体大小 默认是11sp
-     */
     public void setTextSize(int textSize) {
         this.textSize = textSize;
     }
 
-    /**
-     * 设置图片到顶部的距离 默认是3dp
-     */
     public void setImgPandTop(int imgPandTop) {
         this.imgPandTop = imgPandTop;
     }
 
-    /**
-     * 设置图片到文字间距离 默认8dp
-     */
     public void setImgPandBottom(int imgPandBottom) {
         this.imgPandBottom = imgPandBottom;
     }
 
-    /**
-     * 设置文字到底部的距离 默认是0
-     */
     public void setTvPandBottom(int tvPandBottom) {
         this.tvPandBottom = tvPandBottom;
     }
