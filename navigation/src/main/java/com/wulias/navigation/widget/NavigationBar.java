@@ -7,6 +7,7 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Matrix;
 import android.graphics.Paint;
+import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
@@ -250,7 +251,7 @@ public class NavigationBar extends View implements ViewPager.OnPageChangeListene
 
         selectItem = position;
         if (onInitialization != null) {
-            changeFragment(onInitialization.onInitialization(position, mDatas.get(position)));
+            commitFragment(onInitialization.onInitialization(position, mDatas.get(position)));
         }
         invalidate();
     }
@@ -261,6 +262,7 @@ public class NavigationBar extends View implements ViewPager.OnPageChangeListene
      *
      * @param fragment
      */
+    @Deprecated
     private void changeFragment(Fragment fragment) {
         if (fragmentId == 0 || fragment == null || manager == null) return;
 
@@ -277,6 +279,37 @@ public class NavigationBar extends View implements ViewPager.OnPageChangeListene
         beginTransaction.commit();
 
         currFragment = fragment;
+    }
+
+
+    /**
+     * 跳转到fragment
+     *
+     * @param fragmentTo   Fragment
+     */
+    private void commitFragment(Fragment fragmentTo) {
+
+        if (fragmentId == 0 || fragmentTo == null || manager == null) return;
+
+        FragmentTransaction ft = manager.beginTransaction();
+        if (currFragment == null) {
+            ft.remove(fragmentTo).commit();
+            ft = manager.beginTransaction();
+            ft.add(fragmentId, fragmentTo, fragmentTo.getClass().getName());
+            ft.commit();
+            return;
+        }
+        if (fragmentTo.isAdded()) {
+            ft.hide(currFragment).show(fragmentTo).commit();
+            manager.executePendingTransactions();
+        } else {
+            ft.remove(fragmentTo).commit();
+            ft = manager.beginTransaction();
+            ft.hide(currFragment).add(fragmentId, fragmentTo, fragmentTo.getClass().getName());
+            ft.commit();
+        }
+
+
     }
 
     /**

@@ -34,7 +34,7 @@ public class NavigationActivity extends AppCompatActivity implements OnFragmentI
         navigationBar.addItem("订场地", R.mipmap.ic_main_ground, R.mipmap.ic_main_ground_select);
         navigationBar.addItem("购物车", R.mipmap.ic_main_car, R.mipmap.ic_main_car_select);
         navigationBar.addItem("我的", R.mipmap.ic_main_self, R.mipmap.ic_main_self_select);
-//        navigationBar.addOnInitialization(this);//初始化回调，一定要设置，非Viewpage
+        navigationBar.addOnInitialization(this);//初始化回调，一定要设置，非Viewpage
         navigationBar.addOnNavigationListener(this);
         //设置默认 这个没有默认，需要用户自己设置
         navigationBar.selectCurrentItem(0);
