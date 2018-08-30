@@ -297,9 +297,7 @@ public class NavigationBar extends View implements ViewPager.OnPageChangeListene
             ft = manager.beginTransaction();
             ft.add(fragmentId, fragmentTo, fragmentTo.getClass().getName());
             ft.commit();
-            return;
-        }
-        if (fragmentTo.isAdded()) {
+        }else if (fragmentTo.isAdded()) {
             ft.hide(currFragment).show(fragmentTo).commit();
             manager.executePendingTransactions();
         } else {
@@ -308,8 +306,7 @@ public class NavigationBar extends View implements ViewPager.OnPageChangeListene
             ft.hide(currFragment).add(fragmentId, fragmentTo, fragmentTo.getClass().getName());
             ft.commit();
         }
-
-
+        currFragment = fragmentTo;
     }
 
     /**
